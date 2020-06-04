@@ -13,8 +13,14 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var frequencyLabel: UILabel!
     @IBOutlet weak var offsetLabel: UILabel!
-    
     @IBOutlet weak var notesView: UIPickerView!
+    
+    
+    @IBOutlet weak var left1: UIImageView!
+    @IBOutlet weak var left2: UIImageView!
+    @IBOutlet weak var middle: UIImageView!
+    @IBOutlet weak var right2: UIImageView!
+    @IBOutlet weak var right1: UIImageView!
     
     let audioTracker = AudioTracker()
     var rotationAngle : CGFloat!
@@ -22,6 +28,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
         AKSettings.audioInputEnabled = true
         initPickerViewDelegation()
         rotatePickerView(pickerView: notesView)
@@ -38,7 +45,7 @@ class ViewController: UIViewController {
             AKLog("AudioKit did not start!")
         }
         
-        Timer.scheduledTimer(timeInterval: 0.3,
+        Timer.scheduledTimer(timeInterval: 0.2,
                              target: self,
                              selector: #selector(ViewController.updateUI),
                              userInfo: nil,
@@ -46,12 +53,40 @@ class ViewController: UIViewController {
     }
     
     @objc func updateUI() {
+        
         let (rowNumber, frequency, offset) = self.audioTracker.getFrequncyInfo()
         if rowNumber != nil {
+            let offset10 = Int(offset * 10)
+            
             frequencyLabel.text = String(format: "%.2f", frequency)
-            offsetLabel.text = "\(Int(offset * 10.0))"
+            offsetLabel.text = "\(offset > 0 ? "+" : "")\(offset10)"
             notesView.selectRow(rowNumber!, inComponent: 0, animated: true)
+            
+            middle.alpha = 1
+            if(offset10 > 20){
+                setImages(0,0,1,1,1)
+            }else if(offset10 > 8){
+                setImages(0,0,1,1,1)
+            }else if(offset10 < -20){
+                setImages(1,1,1,0,0)
+            }else if(offset10 < -8){
+                setImages(0,1,1,0,0)
+            }else {
+                setImages(0, 0, 1, 0, 0)
+            }
+            
         }
+    }
+    
+    func setImages(_ l1: CGFloat, _ l2: CGFloat, _ mid: CGFloat, _ r2: CGFloat, _ r1: CGFloat){
+        DispatchQueue.main.async {
+            self.left1.alpha = l1
+            self.left2.alpha = l2
+            self.middle.alpha = mid
+            self.right2.alpha = r2
+            self.right1.alpha = r1
+        }
+         
     }
 
 }
@@ -101,7 +136,7 @@ extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
         label.font = UIFont.systemFont(ofSize: 40, weight: .bold)
         label.minimumScaleFactor = 0.5
         label.textAlignment = .center
-        label.textColor = UIColor.black
+        label.textColor = #colorLiteral(red: 0.8980392157, green: 0.8980392157, blue: 0.8980392157, alpha: 1)
         label.transform = CGAffineTransform(rotationAngle: 90 * (.pi / 180 ))
         
         let (note, octave) = audioTracker.convertRowToNote(row)
